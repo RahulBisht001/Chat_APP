@@ -5,7 +5,7 @@ import { Stack } from '@mui/material'
 
 import SideBar from './SideBar';
 
-const isAuthenticated = true
+const isAuthenticated = false
 const DashboardLayout = () => {
 
   if (!isAuthenticated) {

@@ -5,7 +5,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import Logo from '../../assets/Images/Hike.png'
 
 
-const isAuthenticated = true
+const isAuthenticated = false
 
 const MainLayout = () => {
 

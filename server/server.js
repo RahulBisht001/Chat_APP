@@ -4,6 +4,11 @@ const dotenv = require('dotenv')
 const bodyParser = require('body-parser')
 const cors = require('cors') //? Cross origin Resources sharing
 
+
+const DBConnection = require('./DB_Connection')
+
+
+
 //! Security Purpose
 const rateLimit = require('express-rate-limit') //? access  request attack
 const helmet = require('helmet')
@@ -14,7 +19,18 @@ const xss = require('xss') //? Cross site scripting attack
 const app = express()
 
 dotenv.config({ path: './config.env' })
+
+//? For Error Handling
+process.on('uncaughtException', (err) => {
+    console.log(err)
+    process.exit(1)
+})
+
 const PORT = process.env.PORT || 5000
+
+// DataBase Connection
+DBConnection()
+
 
 //?   Middlewares
 app.use(express.json({ limit: '100kb' }))
@@ -36,20 +52,16 @@ const limiter = rateLimit({
 })
 
 app.use('/hike', limiter)
-
 app.use(express.urlencoded({
     extended: true,
 }))
-
 app.use(mongoSanitize())
 app.use(xss)
-
 app.use(cors({
     origin: '*',
     methods: ['GET', 'PUT', 'PATCH', 'DELETE', 'POST'],
     credentials: true
 }))
-
 
 
 
@@ -59,4 +71,12 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`server is running pn http://localhost:${PORT}`)
+})
+
+
+process.on('unhandledRejection', (err) => {
+    console.log(err)
+    // app.close(() => {
+    process.exit(1)
+    // })
 })
