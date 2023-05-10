@@ -7,9 +7,16 @@ import { Alert, Button, IconButton, InputAdornment, Link, Stack } from '@mui/mat
 import RHFTextField from '../../components/hook-form/RHFTextField'
 import { Eye, EyeSlash } from 'phosphor-react'
 import { Link as RouterLink } from 'react-router-dom'
+import { loginUser } from '../../Redux/Slices/auth'
+
+
+import { useDispatch } from 'react-redux'
+
+
 
 const LoginForm = () => {
 
+    const dispatch = useDispatch()
     const [showPassword, setShowPassword] = useState(false)
 
     const LoginSchema = Yup.object().shape({
@@ -34,7 +41,10 @@ const LoginForm = () => {
     const onSubmit = async (data) => {
         try {
             // Submission Successful
+            //^ this data is basically form data
+            dispatch(loginUser(data))
             console.log("LoginData " + data)
+
         } catch (error) {
             console.log("Form Error in LoginForm.js")
             console.log(error)

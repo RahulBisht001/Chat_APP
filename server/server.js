@@ -5,18 +5,21 @@ const bodyParser = require('body-parser')
 const cors = require('cors') //? Cross origin Resources sharing
 
 
-const DBConnection = require('./DB_Connection')
+const routes = require('./routes/index')
 
+
+const DBConnection = require('./DB_Connection')
 
 
 //! Security Purpose
 const rateLimit = require('express-rate-limit') //? access  request attack
 const helmet = require('helmet')
 const mongoSanitize = require('express-mongo-sanitize')
-const xss = require('xss') //? Cross site scripting attack
+const xss = require('xss-clean') //? Cross site scripting attack
 
 
 const app = express()
+
 
 dotenv.config({ path: './config.env' })
 
@@ -42,6 +45,7 @@ app.use(bodyParser.urlencoded({
 app.use(helmet())
 
 if (process.env.NODE_ENV === 'development') {
+    // console.log("HI Rb")
     app.use(morgan('dev'))
 }
 
@@ -56,23 +60,18 @@ app.use(express.urlencoded({
     extended: true,
 }))
 app.use(mongoSanitize())
-app.use(xss)
+app.use(xss())
 app.use(cors({
     origin: '*',
     methods: ['GET', 'PUT', 'PATCH', 'DELETE', 'POST'],
     credentials: true
 }))
 
-
-
-app.get('/', (req, res) => {
-    res.send('Hi')
-})
+app.use(routes)
 
 app.listen(PORT, () => {
-    console.log(`server is running pn http://localhost:${PORT}`)
+    console.log(`Server Listening at PORT http://localhost:${PORT}`)
 })
-
 
 process.on('unhandledRejection', (err) => {
     console.log(err)

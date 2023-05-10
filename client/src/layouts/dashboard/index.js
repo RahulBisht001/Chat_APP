@@ -1,14 +1,17 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-
+import { useSelector } from 'react-redux'
 import { Stack } from '@mui/material'
 
 import SideBar from './SideBar';
 
-const isAuthenticated = false
+
+
 const DashboardLayout = () => {
 
-  if (!isAuthenticated) {
+  const { isLoggedIn } = useSelector((state) => state.auth)
+
+  if (!isLoggedIn) {
     return <Navigate to='/auth/login' />
   }
 

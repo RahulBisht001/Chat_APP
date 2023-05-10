@@ -1,13 +1,15 @@
 const mongoose = require('mongoose')
 const bcryptjs = require('bcryptjs')
+const crypto = require('crypto')
+
 
 const userSchema = mongoose.Schema({
     firstName: {
-        type: true,
+        type: String,
         required: [true, 'First Name is required'],
     },
     lastName: {
-        type: true,
+        type: String,
         required: [true, 'Last Name is required'],
     },
     avatar: {
@@ -32,6 +34,9 @@ const userSchema = mongoose.Schema({
     password: {
         type: String,
     },
+    passwordConfirm: {
+        type: String,
+    },
     passwordChangedAt: {
         type: Date,
     },
@@ -43,6 +48,7 @@ const userSchema = mongoose.Schema({
     },
     createdAt: {
         type: Date,
+        default: Date.now(),
     },
     updatedAt: {
         type: Date,
@@ -52,7 +58,7 @@ const userSchema = mongoose.Schema({
         default: false,
     },
     otp: {
-        type: Number,
+        type: String,
     },
     otp_expiry_time: {
         type: Date,
@@ -63,13 +69,30 @@ const userSchema = mongoose.Schema({
 userSchema.pre('save', async function (next) {
 
     // only run this function if OTP is modified
-    if (!this.isModified('otp')) {
-        next()
-    }
+    if (!this.isModified('otp') || !this.otp)
+        return next()
 
-    this.otp = await bcryptjs.hash(this.otp, 12)
+    this.otp = await bcryptjs.hash(this.otp.toString(), 12)
+
+    console.log(this.otp.toString(), "FROM PRE SAVE HOOK");
+    next();
+})
+
+
+//^ New changes : According to the github repo
+userSchema.pre('save', async function (next) {
+    // console.log("Inside userSchema password middleware")
+
+    // only run this function if password is modified
+    if (!this.isModified('password') || !this.password)
+        return next()
+
+    this.passwordChangedAt = Date.now() - 1000;
+    this.password = await bcryptjs.hash(this.password, 12)
     next()
 })
+
+
 
 userSchema.methods.correctPassword =
     async (candidatePassword, userPassword) => {
@@ -81,5 +104,31 @@ userSchema.methods.correctOTP =
     async (candidateOTP, userOTP) => {
         return await bcryptjs.compare(candidateOTP, userOTP)
     }
+
+//^ New changes : According to the github repo
+userSchema.methods.changePasswordAfter =
+    async function (JWT_timestamp) {
+        if (this.passwordChangedAt) {
+            const changedTimeStamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10)
+            return JWT_timestamp < changedTimeStamp
+        }
+        return false
+    }
+
+
+
+//! regular function is imp here , for the correct working of this keyword
+userSchema.methods.createResetPasswordToken =
+    async function () {
+        const resetToken = crypto.randomBytes(32).toString('hex')
+        this.passwordResetToken = crypto
+            .createHash('sha256')
+            .update(resetToken)
+            .digest('hex')
+
+        this.passwordResetExpires = Date.now() + 10 * 60 * 1000
+        return resetToken
+    }
+
 
 module.exports = mongoose.model('User', userSchema)

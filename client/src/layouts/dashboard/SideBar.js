@@ -1,19 +1,22 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useDispatch } from 'react-redux'
 
-import { useNavigate } from "react-router-dom";
+import { logOutUser } from "../../Redux/Slices/auth"
+
 
 //!  MUI components
 import { Box, IconButton, Divider, Stack, Avatar, Menu, MenuItem } from '@mui/material'
 import { Gear } from 'phosphor-react'
-import { faker } from "@faker-js/faker";
+import { faker } from "@faker-js/faker"
 
 //!  Mui Styles
-import { useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles"
 
 
 //!   local imports
 import Logo from '../../assets/Images/Hike.png'
-import { Nav_Buttons, Profile_Menu } from "../../data";
+import { Nav_Buttons, Profile_Menu } from "../../data"
 import ThemeSwitch from './themeSwitch'
 
 //!   custom hook
@@ -42,7 +45,7 @@ const getMenuPath = (index) => {
         case 1:
             return '/settings'
         case 2:
-            //Todo need to write the logout logic 
+            //~ ___________Todo need to write the logout logic 
             return '/auth/login'
         default:
             return '/404'
@@ -52,6 +55,8 @@ const getMenuPath = (index) => {
 
 
 const SideBar = () => {
+
+    const dispatch = useDispatch()
     const theme = useTheme()
     const navigate = useNavigate()
     const [selected, setSelected] = useState(0)
@@ -208,7 +213,13 @@ const SideBar = () => {
                                             }}
                                         >
                                             <Stack
-                                                onClick={() => navigate(getMenuPath(idx))}
+                                                onClick={() => {
+                                                    //!  if idx = 2 then logout (call dispatch)
+                                                    if (idx === 2)
+                                                        dispatch(logOutUser())
+                                                    else
+                                                        navigate(getMenuPath(idx))
+                                                }}
                                                 direction={'row'}
                                                 justifyContent={'space-between'}
                                                 alignItems={'center'}
