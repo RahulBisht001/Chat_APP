@@ -40,7 +40,7 @@ exports.login = async (req, res, next) => {
     if (!user || !(await user.correctPassword(password, user.password))) {
         return res.status(400).json({
             status: 'error',
-            message: 'Email or Password is incorrect'
+            message: 'Email or Password is incorrect',
         })
     }
 
@@ -63,6 +63,7 @@ exports.register = async (req, res, next) => {
 
     const filteredBody = filterObj(req.body, 'firstName', 'lastName', 'password', 'email')
 
+    console.log('firstName' + " " + firstName)
     //^ check if a verified user with this email exist.
 
     const existing_user = await User.findOne({ email: email })
@@ -261,10 +262,18 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
     // console.log("ResetToken")
     console.log(resetToken)
-    const resetURL = `http://hike.com/auth/reset-password/?code=${resetToken}`
+    const resetURL = `http://localhost:8000/auth/new-password/?token=${resetToken}`
 
     try {
         //Todo => send email functionality
+
+        mailService.sendEmail({
+            from: "rahulbisht1012@gmail.com",
+            to: user.email,
+            subject: "Reset Password for Login Hike",
+            html: resetPassword(user.firstName, resetURL),
+            attachments: [],
+        })
         return res.status(200).json({
             status: 'success',
             message: 'Reset password link sent on email'
@@ -290,7 +299,8 @@ exports.forgotPassword = async (req, res, next) => {
 //!  ______________   resetPassword end point   ____________________
 
 exports.resetPassword = async (req, res, next) => {
-
+    console.log("params")
+    console.log(req.params)
     //* ___________ step 1: get the user Based on the resetToken
     const hashedToken = crypto
         .createHash('sha256')

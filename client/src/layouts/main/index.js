@@ -26,7 +26,8 @@ const MainLayout = () => {
             <img style={{ width: 80, height: 80 }} src={Logo} alt="App Logo" />
           </Stack>
         </Stack>
-        <div>Main Layout</div>
+        {/* <div>Main Layout</div> */}
+
 
         <Outlet />
       </Container>

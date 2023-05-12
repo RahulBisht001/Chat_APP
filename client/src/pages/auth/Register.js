@@ -22,7 +22,8 @@ const Register = () => {
                         Log in
                     </Link>
                 </Stack>
-                {/* Register Form */}
+
+                {/* //~ _________Register Form */}
                 <RegisterForm />
 
                 {/* Social Auth */}

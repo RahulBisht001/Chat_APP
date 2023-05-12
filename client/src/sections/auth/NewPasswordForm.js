@@ -1,29 +1,39 @@
 import React, { useState } from 'react'
 import * as Yup from 'yup'
+import { useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import FormProvider from '../../components/hook-form/FormProvider'
-import { Alert, Button, IconButton, InputAdornment, Link, Stack } from '@mui/material'
+import { Alert, Button, IconButton, InputAdornment, Stack } from '@mui/material'
 import RHFTextField from '../../components/hook-form/RHFTextField'
 import { Eye, EyeSlash } from 'phosphor-react'
-import { Link as RouterLink } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { NewPassword } from '../../Redux/Slices/auth'
+
+
+
+
 
 const NewPasswordForm = () => {
+
+    const dispatch = useDispatch()
+    const [queryParameters] = useSearchParams()
+
 
     const [showPassword, setShowPassword] = useState(false)
 
     const NewPasswordSchema = Yup.object().shape({
-        newPassword: Yup.string()
+        password: Yup.string()
             .required("Password is required")
             .min(8, 'Password should be AtLeast 8 Characters Long'),
-        confirmPassword: Yup.string()
+        passwordConfirm: Yup.string()
             .required("Password is required")
-            .oneOf([Yup.ref('newPassword'), null], 'NewPassword and Confirm Password must be the same ')
+            .oneOf([Yup.ref('password'), null], 'NewPassword and Confirm Password must be the same ')
     })
 
     const defaultValues = {
-        newPassword: '',
-        confirmPassword: ''
+        password: '',
+        passwordConfirm: ''
     }
 
     const methods = useForm({
@@ -35,9 +45,10 @@ const NewPasswordForm = () => {
         formState: { errors, isSubmitting, isSubmitSuccessful } } = methods
 
 
-    const onSubmit = async () => {
+    const onSubmit = async (data) => {
         try {
-            // Submission Successful
+            //^ Submit to backend
+            dispatch(NewPassword({ ...data, token: queryParameters.get('token') }))
         } catch (error) {
             console.log("Form Error in NewPasswordForm.js")
             console.log(error)
@@ -56,7 +67,7 @@ const NewPasswordForm = () => {
                     {!!errors.afterSubmit && <Alert severity='error'>{errors.afterSubmit.message}</Alert>}
 
                     <RHFTextField
-                        name='newPassword'
+                        name='password'
                         label='New Password'
                         type={showPassword ? 'text' : 'password'}
                         InputProps={{
@@ -72,7 +83,7 @@ const NewPasswordForm = () => {
                         }}
                     />
                     <RHFTextField
-                        name='confirmPassword'
+                        name='passwordConfirm'
                         label='Confirm Password'
                         type={showPassword ? 'text' : 'password'}
                         InputProps={{

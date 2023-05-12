@@ -18,7 +18,8 @@ export default function RHFTextField({ name, helperText, ...other }) {
 
     const { control } = useFormContext()
 
-    return <Controller name={name}
+    return <Controller
+        name={name}
         control={control}
         render={({ field, fieldState: { error } }) => (
             <TextField
