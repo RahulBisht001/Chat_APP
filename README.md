@@ -1,7 +1,7 @@
 # Chat App
 
 
-# Messaging APP Notes
+## Messaging APP Notes
 
 - [ ]  I have to change the normal icons to lord-icon animated icons
 
