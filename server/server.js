@@ -1,81 +1,85 @@
-const express = require('express')
-const morgan = require('morgan') //? http request logger middleware for node.js
-const dotenv = require('dotenv')
-const bodyParser = require('body-parser')
-const cors = require('cors') //? Cross origin Resources sharing
+const dotenv = require("dotenv")
+dotenv.config({ path: "./config.env" })
 
+const User = require('./models/user')
 
-const routes = require('./routes/index')
+//! _________________ Socket.io _________________
+const { Server } = require('socket.io')
 
 
 const DBConnection = require('./DB_Connection')
 
-
-//! Security Purpose
-const rateLimit = require('express-rate-limit') //? access  request attack
-const helmet = require('helmet')
-const mongoSanitize = require('express-mongo-sanitize')
-const xss = require('xss-clean') //? Cross site scripting attack
-
-
-const app = express()
-
-
-dotenv.config({ path: './config.env' })
-
-//? For Error Handling
-process.on('uncaughtException', (err) => {
+process.on("uncaughtException", (err) => {
     console.log(err)
+    console.log("UNCAUGHT Exception! Shutting down ...")
     process.exit(1)
-})
+    //^ Exit Code 1 indicates that a container shut down, either because of an application failure.
+});
+
 
 const PORT = process.env.PORT || 5000
+const app = require("./app")
+
+
+const http = require("http")
+const server = http.createServer(app)
+
+const io = new Server(server, {
+    cors: {
+        origin: 'http://localhost:3000',
+        methods: ['GET', 'POST'],
+    }
+})
+
 
 // DataBase Connection
 DBConnection()
 
 
-//?   Middlewares
-app.use(express.json({ limit: '100kb' }))
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({
-    extended: true
-}))
-
-app.use(helmet())
-
-if (process.env.NODE_ENV === 'development') {
-    // console.log("HI Rb")
-    app.use(morgan('dev'))
-}
-
-const limiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 3000,
-    message: 'Too many requests from this IP .Please try again in an hour'
-})
-
-app.use('/hike', limiter)
-app.use(express.urlencoded({
-    extended: true,
-}))
-app.use(mongoSanitize())
-app.use(xss())
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'PUT', 'PATCH', 'DELETE', 'POST'],
-    credentials: true
-}))
-
-app.use(routes)
-
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server Listening at PORT http://localhost:${PORT}`)
+});
+
+
+io.on('connection', async (socket) => {
+
+    console.log("socket")
+    console.log(socket)
+    console.log(socket.handshake.query['user_id'])
+
+
+    const user_id = socket.handshake.query['user_id']
+    const socket_id = socket.id
+
+    console.log(`User Connected with this socket_id ${socket_id}`)
+
+    if (user_id) {
+        await User.findByIdAndUpdate(user_id, { socket_id, })
+    }
+
+    //^ We can write our own socket event listners here
+
+    socket.on('friend_request', async (data) => {
+        console.log("Data")
+        console.log(data)
+        console.log(data.to)
+
+        const to = await User.findById(data.to)
+
+        //Todo => Create a Friend Request
+
+        io.to(to.socket_id).emit('new_friend_request', {
+
+        })
+    })
 })
 
-process.on('unhandledRejection', (err) => {
-    console.log(err)
-    // app.close(() => {
-    process.exit(1)
-    // })
-})
+
+process.on("unhandledRejection", (err) => {
+    console.log(err);
+    console.log("UNHANDLED REJECTION! Shutting down ...")
+    server.close(() => {
+        process.exit(1)
+        //^  Exit Code 1 indicates that a container shut down, either because of an application failure.
+    });
+});
